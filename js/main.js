@@ -33,7 +33,7 @@
         numOfSheep = 10
         var group = this.physics.add.group();
         for (i = 0; i < numOfSheep; i++){
-            sheepArray.push(new Sheep(group, sheepArray, graphics));
+            sheepArray.push(new Sheep(group, sheepArray));
         }
 
         this.physics.add.collider(group, group);

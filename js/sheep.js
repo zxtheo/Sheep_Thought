@@ -11,6 +11,7 @@ class Sheep{
         this.sprite.body.setCircle(radius)
         this.sheepArray = sheepArray;     
         this.direction;
+        this.newVel;
 
 
     }
@@ -21,7 +22,9 @@ class Sheep{
         this.sprite.rotation = this.direction;
 
         var cohesion = this.multiply(this.cohesion(), 5);
-        this.sprite.setVelocity(cohesion.x, cohesion.y);
+        var seperation = this.multiply(this.seperation(), 4000);
+        this.newVel = this.add(cohesion, seperation);
+        this.sprite.setVelocity( this.newVel.x,  this.newVel.y);
     }
 
     cohesion(){
@@ -31,17 +34,27 @@ class Sheep{
             averagePosition.x += x;
             averagePosition.y += y;
         });
-        
         var sheepNo =  this.sheepArray.length;
         averagePosition.x = averagePosition.x / sheepNo;
         averagePosition.y = averagePosition.y / sheepNo;
-
         var normSheep = this.subtract(averagePosition, this.sprite.body);
         var magnitude = this.magnitude(normSheep);
-
         var cohesionVector = this.divide(normSheep, magnitude);
-
         return cohesionVector;
+    }
+
+    seperation(){
+        var seperation = {x:0, y:0}
+        this.sheepArray.forEach(sheep => {
+            if (sheep.sprite != this.sprite){
+                var normSheep = this.subtract(this.sprite, sheep.sprite);
+                var magnitude = this.magnitude(normSheep);
+                var sepVec = this.multiply(this.divide(normSheep, magnitude), this.inverse(magnitude, 1));
+                seperation.x += sepVec.x;
+                seperation.y += sepVec.y;
+            }
+        });
+        return seperation
     }
 
     subtract(a, b){
@@ -58,5 +71,13 @@ class Sheep{
 
     multiply(a, b){
         return{x:a.x*b, y:a.y*b};
+    }
+
+    add(a, b){
+        return{x:a.x+b.x, y:a.y+b.y};
+    }
+
+    inverse(a, b){
+        return Math.pow((a+ 0.01)/b, -2);
     }
 }

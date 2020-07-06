@@ -20,8 +20,8 @@
     var sheepArray = []
     var game = new Phaser.Game(config);
     var sheep;
-    var circ = [];
     var graphics;
+    var mouseLocation = {x:0, y:0};
     function preload ()
     {
         this.load.image('sheep', 'assets/baabaa.png');
@@ -30,19 +30,25 @@
     function create ()
     {
         graphics = this.add.graphics()
-        numOfSheep = 10
+        numOfSheep = 400
         var group = this.physics.add.group();
         for (i = 0; i < numOfSheep; i++){
             sheepArray.push(new Sheep(group, sheepArray));
         }
 
         this.physics.add.collider(group, group);
+        
     }
 
     function update() {
+        this.input.on('pointermove', function(pointer) {
+            mouseLocation = {x:pointer.x, y:pointer.y}
+            
+        });
         graphics.clear()
         sheepArray.forEach(sheep => {
             sheep.update();
         });
+        
     }
     

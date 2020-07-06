@@ -4,7 +4,8 @@ const FOV = Math.PI/2
 class Sheep{
     constructor(physics, sheepArray){
         this.sprite = physics.create(Math.random()*400, Math.random()*400, "sheep");
-        this.sprite.setScale(0.05)
+        this.sprite.setScale(0.01)
+        this.sprite.body.setMaxVelocity(20,20);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.setBounce(0);
         var radius = this.sprite.width / 2;
@@ -21,10 +22,15 @@ class Sheep{
         this.direction = Math.atan2(y, x) + Math.PI/2;
         this.sprite.rotation = this.direction;
 
-        var cohesion = this.multiply(this.cohesion(), 5);
-        var seperation = this.multiply(this.seperation(), 4000);
+        var cohesion = this.multiply(this.cohesion(), 4);
+        var seperation = this.multiply(this.seperation(), 100);
+        var alignment = this.multiply(this.alignment(), 1);
+        var escape = this.multiply(this.escape(),100);
         this.newVel = this.add(cohesion, seperation);
-        this.sprite.setVelocity( this.newVel.x,  this.newVel.y);
+        this.newVel = this.add(this.newVel, alignment);
+        this.newVel = this.add(this.newVel, escape)
+        // console.log(alignment)
+        this.sprite.setVelocity(this.newVel.x,  this.newVel.y);
     }
 
     cohesion(){
@@ -55,6 +61,29 @@ class Sheep{
             }
         });
         return seperation
+    }
+
+    alignment(){
+        var alignment = {x:0, y:0};
+        var count = 0;
+        this.sheepArray.forEach(sheep => {
+            if (this.magnitude(this.subtract(sheep.sprite, this.sprite)) <=10){
+                alignment.x += sheep.sprite.body.velocity.x
+                alignment.y += sheep.sprite.body.velocity.y
+                count ++;
+            }
+        });
+        alignment.x = alignment.x / count;
+        alignment.y = alignment.y / count;
+        return alignment
+    }
+
+    escape(){
+        
+        var normSheep = this.subtract(this.sprite, mouseLocation);
+        var magnitude = this.magnitude(normSheep);
+        var escape = this.multiply(this.divide(normSheep, magnitude), this.inverse(magnitude, 10))
+        return escape
     }
 
     subtract(a, b){

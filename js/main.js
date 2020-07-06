@@ -1,6 +1,6 @@
     var config = {
         type: Phaser.AUTO,
-        width: 400,
+        width: 1000,
         height: 600,
         backgroundColor: '#52c400',
         physics: {
@@ -30,7 +30,7 @@
     function create ()
     {
         graphics = this.add.graphics()
-        numOfSheep = 400
+        numOfSheep = 100
         var group = this.physics.add.group();
         for (i = 0; i < numOfSheep; i++){
             sheepArray.push(new Sheep(group, sheepArray));

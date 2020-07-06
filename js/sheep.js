@@ -3,9 +3,9 @@ const FOV = Math.PI/2
 
 class Sheep{
     constructor(physics, sheepArray){
-        this.sprite = physics.create(Math.random()*400, Math.random()*400, "sheep");
-        this.sprite.setScale(0.01)
-        this.sprite.body.setMaxVelocity(20,20);
+        this.sprite = physics.create(Math.random()*1000, Math.random()*600, "sheep");
+        this.sprite.setScale(0.02)
+        this.sprite.body.setMaxVelocity(40,40);
         this.sprite.setCollideWorldBounds(true);
         this.sprite.setBounce(0);
         var radius = this.sprite.width / 2;
@@ -22,15 +22,33 @@ class Sheep{
         this.direction = Math.atan2(y, x) + Math.PI/2;
         this.sprite.rotation = this.direction;
 
-        var cohesion = this.multiply(this.cohesion(), 4);
-        var seperation = this.multiply(this.seperation(), 100);
-        var alignment = this.multiply(this.alignment(), 1);
-        var escape = this.multiply(this.escape(),100);
-        this.newVel = this.add(cohesion, seperation);
-        this.newVel = this.add(this.newVel, alignment);
-        this.newVel = this.add(this.newVel, escape)
-        // console.log(alignment)
+        this.newVel =this.ruleMerge(this.seperation(),
+                               this.cohesion(),
+                                this.alignment(),
+                                this.escape());
+
         this.sprite.setVelocity(this.newVel.x,  this.newVel.y);
+    }
+
+    ruleMerge(seperation, cohesion, alignment, escape){
+        var normSheep = this.subtract(this.sprite, mouseLocation);
+        var predDistance = this.magnitude(normSheep);
+        var fleeDistance = 200;
+        var ruleMultipler = this.ruleMultiplier(predDistance, fleeDistance)
+        var finalVel = {x:0, y:0};
+        finalVel = this.add(finalVel, this.multiply(cohesion, 2*(ruleMultipler*7)));
+        finalVel = this.add(finalVel, this.multiply(seperation, 75*(ruleMultipler*20)));
+        finalVel = this.add(finalVel, this.multiply(alignment, 0.5*(ruleMultipler*1)));
+        finalVel = this.add(finalVel, this.multiply(escape,1500));
+
+        
+        return finalVel
+    }
+
+    ruleMultiplier(d, r){
+
+        var vel = (1/Math.PI) * Math.atan((r-d)/20) +0.5
+        return vel
     }
 
     cohesion(){
@@ -73,8 +91,8 @@ class Sheep{
                 count ++;
             }
         });
-        alignment.x = alignment.x / count;
-        alignment.y = alignment.y / count;
+        // alignment.x = alignment.x / count;
+        // alignment.y = alignment.y / count;
         return alignment
     }
 

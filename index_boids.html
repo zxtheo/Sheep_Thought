@@ -1,0 +1,206 @@
+
+<html>
+    <canvas id="myCanvas" width="500" height="500"></canvas>
+    <script>
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+        var sheepno = 10;
+        var boids = [];
+        var mouseX, mouseY;
+        // Settings
+        var s = {
+            // As fasr as possible!
+            refresh_ms: 0,
+            boid_num: 10,
+            average_boid_radius: 14,
+            boid_colors: {
+                mouse: 'rgba(0, 255, 255, 1)',
+                normal: 'rgba(255, 255, 255, 1)',
+                area: 'rgba(40, 40, 40, 1)',
+                center: 'rgba(255, 0, 200, 1)',
+                velocity: 'rgba(255, 0, 0, 1)'
+            },
+            bounds_margin: {
+                top: 100, 
+                left: 100, 
+                right: 100, 
+                bottom: 100
+            },
+            draw_velocities: true,
+            desire_to_center: {
+                x: 100,
+                y: 100
+            },
+            desire_to_stay_apart: 5,
+            desire_to_match_velocity: 20,
+            max_closeness: 10,
+            swarm_closeness: 200,
+            mouse_catch_distance: 100,
+            start_velocity: 0,
+            max_velocity: 10,
+            desire_to_catch_mouse: 20,
+            desire_to_avoid_threats: 20
+        }
+
+        function loop(){
+            ctx.clearRect(0,0,500,500);
+            // Main looping through of all the boids
+            for(var i = 0; i < s.boid_num; i++) {
+                var boid = boids[i];
+
+                // Define rule 1 velocity, and so on
+                boid.r1v = {x: 0, y: 0};
+                boid.r2v = {x: 0, y: 0};
+                boid.r3v = {x: 0, y: 0};
+                // Define rule 1 count (for average later), and so on
+                boid.r1c = 0;
+                boid.r3c = 0;
+                
+                // For every other boid, compare boid A and boid B
+                for(var j = 0; j < s.boid_num; j++) {
+                    var b = boids[j];
+                    // Assuming it's not the same boid
+                    if(boid != b) {
+                        // Calculate all the rules
+                        var v = rule1(boid, b);
+                        var v = rule2(boid, b);
+                        var v = rule3(boid, b);
+                    }
+                }
+                
+                // Now that we've looped through all the other boids, apply our findings to the current boid
+                // Boids at the front of the array will be changed before those at the back, thus offsetting
+                // these boids perception of the state of things. Not really a bad thing, chalk it up to some
+                // animals in swarms being less perceptive than others, haha.
+                applyRule1(boid);
+                applyRule2(boid);
+                applyRule3(boid);
+                
+                // Also, independently of the crowd, avoid threats, stay in boids,
+                // follow the mouse if it is near, and don't go to fast
+                // avoidThreats(boid);
+                // stayInBounds(boid);
+                // followMouse(boid);
+                // limitVelocity(boid);
+
+                // Apply these calculations to the boid object
+                boid.x += boid.vector.x;
+                boid.y += boid.vector.y;
+                
+                drawBoidArea(boid);
+
+            }
+        }
+    
+
+        function rule1(a, b) {
+            if(Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)) < s.swarm_closeness) {
+                a.r1v.x += b.x; 
+                a.r1v.y += b.y;
+                a.r1c++;
+            }
+        }
+
+        function applyRule1(boid) {
+            if(boid.r1c > 0) {
+                boid.r1v.x /= boid.r1c;
+                boid.r1v.y /= boid.r1c;
+                boid.vector.x += (boid.r1v.x - boid.x) / s.desire_to_center.x;
+                boid.vector.y += (boid.r1v.y - boid.y) / s.desire_to_center.y;
+            }
+        }
+        
+        function rule2(a, b) {
+            if(Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)) < s.max_closeness) {
+                a.r2v.x += 0 - (b.x - a.x) / s.desire_to_stay_apart;
+                a.r2v.y += 0 - (b.y - a.y) / s.desire_to_stay_apart;
+            }
+        }
+        
+        function applyRule2(boid) {
+            boid.vector.x += boid.r2v.x;
+            boid.vector.y += boid.r2v.y;
+        }
+
+        function rule3(a, b) {
+            if(Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2)) < s.swarm_closeness) {
+                a.r3v.x += b.vector.x;
+                a.r3v.y += b.vector.y;
+                a.r3c++;
+            }
+        }
+
+        function applyRule3(boid) {
+            if(boid.r3c > 0) {
+                boid.r3v.x /= boid.r3c;
+                boid.r3v.y /= boid.r3c;
+                boid.vector.x += (boid.r3v.x - boid.vector.x) / s.desire_to_match_velocity;
+                boid.vector.y += (boid.r3v.y - boid.vector.y) / s.desire_to_match_velocity;
+            }
+        }
+    
+
+        async function drawArc(x,y){
+            
+        }
+
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * Math.floor(max));
+        }
+
+        function drawSheep(){
+            sheepArray.forEach(sheep => {
+                drawArc(sheep.x, sheep.y);
+            });
+        }
+
+        // function loop(){
+        //     console.log(mouseX + ":" + mouseY);
+        //     ctx.clearRect(0,0,500,500);
+        //     drawArc(mouseX, mouseY);
+        //     drawSheep();
+        //     tempSheep = sheepArray.slice();
+        //     sheepArray.forEach(sheep => {
+        //         sheep.cohesion(tempSheep);
+        //     });
+        // }
+        addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function drawBoidArea(boid) {
+            ctx.beginPath();
+            ctx.arc(boid.x-5, boid.y-5, 10, 0, 2 * Math.PI);
+            ctx.fillStyle = "black";
+            ctx.fill();
+            ctx.stroke();
+            
+        }
+
+
+
+        function init() {
+            // Set window
+            c.width = 500;
+            c.height = 500;
+
+            // Set boids
+            for(var i = 0; i < s.boid_num; i++) {
+                var radian = ((Math.random() * 360) / 180) * Math.PI;    
+                boids[i] = {
+                    x: Math.round((c.width / 2) + (Math.cos(radian) * 200)),
+                    y: Math.round((c.height / 2) + (Math.sin(radian) * 200)),
+                    vector: {x: (s.start_velocity * -1) + (Math.random() * (2 * s.start_velocity)), y: (s.start_velocity * -1) + (Math.random() * (2 * s.start_velocity))},
+                    following: false,
+                    radius: 10,
+                    area: 10
+                };
+            }    
+        }
+        init();
+        window.setInterval(loop, 100);
+
+
+        </script>
+</html>

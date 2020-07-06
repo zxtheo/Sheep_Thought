@@ -1,0 +1,207 @@
+<html>
+    <canvas id="myCanvas" width="500" height="500"></canvas>
+    <script>
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+        var mouseX, mouseY;
+        s = {
+            numberOfSheep:1,
+            fieldOfView:50
+        }
+        var sheepArray = [];
+        class Sheep{
+            constructor(x,y, direction, id){
+                this.x = x;
+                this.y = y;
+                this.id=id;
+                this.direction = direction;
+            }
+        }
+        
+        function init(){
+            for(i = 0; i < s.numberOfSheep; i++){
+                sheepArray.push(new Sheep(
+                    // Math.floor(Math.random() * Math.floor(400)), 
+                    // Math.floor(Math.random() * Math.floor(400)), 
+                    // Math.floor(Math.random() * Math.floor(360)),
+                    Math.floor(250), 
+                    Math.floor(250), 
+                    Math.floor(0),
+                    i));
+            }
+            drawSheep();
+
+            for (i = 0; i < 0; i++){
+                var point = {
+                    x: Math.random() * 500,
+                    y: Math.random() * 500
+                }
+                
+
+                sheepArray.forEach(sheep => {
+                    // collisionDetection(sheep);
+                    
+
+                    var view = getFieldOfView(sheep, 0);
+                    drawTriangle(view);
+                    var inSector = isInsideSector(s.fieldOfView, 
+                                                view, 
+                                                point,
+                                                sheep.direction - 45, 
+                                                sheep.direction + 45);
+                    
+                    ctx.beginPath();
+                    ctx.arc(point.x-5, point.y-5, 2, 0, 2 * Math.PI);
+                    if (inSector){
+                        ctx.fillStyle = "red";
+                    }else{
+                        ctx.fillStyle = "blue";
+                    }
+                    ctx.fill();
+                    ctx.stroke();
+                });
+            }
+                
+        };
+            
+
+        function drawSheep(){
+            sheepArray.forEach(sheep => {
+                var view = getFieldOfView(sheep, 0);
+                drawTriangle(view);
+
+                ctx.beginPath();
+                ctx.arc(sheep.x-5, sheep.y-5, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = "black";
+                ctx.fill();
+                ctx.stroke();
+
+                
+            });
+        }
+
+        function loop(){
+            console.log(mouseX+":"+mouseY);
+            
+
+        }
+
+        function collisionDetection(sheepA){
+            view = getFieldOfView(sheepA, 0);
+            drawTriangle(view);
+            // SheepArray.forEach(sheepB => {
+            //     if (sheepA.id != sheepB.id){
+            //         var total = (
+            //             Math.atan2(sheepB.y - sheepA.y, sheepB.x - sheepA.x) +
+            //             Math.atan2(sheepB.y - sheepA.y, sheepB.x - sheepA.x) +
+            //             Math.atan2(sheepB.y - sheepA.y, sheepB.x - sheepA.x));
+            //         if (total == 2*Math.PI){
+            //             Console.console.log("sheep in view of:" + sheep.id);
+            //         }
+            //     }
+            // });
+            
+
+            var inSector = isInsideSector(s.fieldOfView, 
+                                            view, 
+                                            {x:mouseX, y:mouseY},
+                                            sheepA.direction - 45, 
+                                            sheepA.direction + 45);
+            
+            console.log(inSector);
+            if (inSector){
+                console.log("mouse in view of:" + sheepA.id);
+            }
+            else{
+                console.log("not in view");
+            }
+
+        }
+        function isInsideSector(radius, view, point, startAngle, endAngle) {
+            var relPoint = {
+                x: view.x1 - point.x,
+                y: view.y1 - point.y
+            };
+
+            polarradius = Math.sqrt(relPoint.x*relPoint.x + relPoint.y*relPoint.y);
+            if (polarradius > radius){
+                return false;
+            }
+
+            if (startAngle < 0){
+                startAngle += 360;
+            }
+
+            
+            Angle = Math.atan(relPoint.y/relPoint.x);
+
+            if (startAngle > endAngle){
+                if (((Angle > startAngle && Angle < 360) ||
+                     (Angle < endAngle && Angle >= 0)) &&
+                     polarradius < radius){
+                         return true;
+                     }
+                else{
+                    return false;
+                }
+            }else if (Angle >= startAngle &&
+                Angle <= endAngle &&
+                polarradius < radius){
+                    return true;
+                }
+            else{
+                return false;
+            }
+        }
+
+        //left:270, right:90, back: 180, front:0
+        function getFieldOfView(sheep, angle){
+            var leftAngle = angle+sheep.direction-45;
+            var rightAngle = angle+sheep.direction+45;
+                                //direction of line  turn into radians  length of line
+            var x2 = sheep.x + Math.cos(leftAngle * Math.PI / 180) * s.fieldOfView;
+            var y2 = sheep.y + Math.sin(leftAngle * Math.PI / 180) * s.fieldOfView;
+
+            var x3 = sheep.x + Math.cos(rightAngle * Math.PI / 180) * s.fieldOfView;
+            var y3 = sheep.y + Math.sin(rightAngle * Math.PI / 180) * s.fieldOfView;
+
+            return {x1:sheep.x, y1:sheep.y, x2:x2, y2:y2, x3:x3, y3:y3};
+        }
+
+        function drawTriangle(view){
+            // ctx.beginPath();
+            // ctx.fillStyle = "red";
+            // ctx.moveTo(view["x1"], view["y1"]);
+            // ctx.lineTo(view["x2"], view["y2"]);
+            // ctx.lineTo(view["x3"], view["y3"]);
+            // ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(view.x1, view.y1, 2, 0, 2 * Math.PI);
+            ctx.fillStyle = "pink";
+            ctx.fill();
+            ctx.stroke();
+    
+            ctx.beginPath();
+            ctx.arc(view.x2, view.y2, 2, 0, 2 * Math.PI);
+            ctx.fillStyle = "yellow";
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(view.x3, view.x3, 2, 0, 2 * Math.PI);
+            ctx.fillStyle = "cyan";
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        init();
+        loop();
+        // window.setInterval(loop, 500);
+    </script>
+</html>

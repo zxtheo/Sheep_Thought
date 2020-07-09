@@ -7,7 +7,6 @@
             default: 'arcade',
             arcade: {
                 debug: false
-                // gravity: { y: 20 }
             }
         },
         scene: {
@@ -30,7 +29,7 @@
     function create ()
     {
         graphics = this.add.graphics()
-        numOfSheep = 100
+        numOfSheep = 500
         var group = this.physics.add.group();
         for (i = 0; i < numOfSheep; i++){
             sheepArray.push(new Sheep(group, sheepArray));
@@ -48,6 +47,9 @@
         graphics.clear()
         sheepArray.forEach(sheep => {
             sheep.update();
+        });
+        sheepArray.forEach(sheep =>{
+            sheep.setVel();
         });
         
     }
